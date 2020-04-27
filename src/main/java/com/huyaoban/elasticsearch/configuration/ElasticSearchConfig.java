@@ -1,4 +1,4 @@
-package com.huyaoban.security.configuration;
+package com.huyaoban.elasticsearch.configuration;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
