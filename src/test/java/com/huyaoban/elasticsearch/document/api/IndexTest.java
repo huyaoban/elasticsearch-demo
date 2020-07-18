@@ -1,10 +1,13 @@
 package com.huyaoban.elasticsearch.document.api;
 
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;
+import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
@@ -44,6 +47,7 @@ public class IndexTest {
 		try {
 			IndexResponse response = restHighLevelClient.index(request, RequestOptions.DEFAULT);
 			log.info("{}", response);
+			printIndexResponse(response);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -61,6 +65,7 @@ public class IndexTest {
 		try {
 			IndexResponse response = restHighLevelClient.index(request, RequestOptions.DEFAULT);
 			log.info("{}", response);
+			printIndexResponse(response);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -124,5 +129,58 @@ public class IndexTest {
 		request.opType("create");
 
 		request.setPipeline("pipeline");
+	}
+
+	/**
+	 * 异步调用接口
+	 */
+	@Test
+	public void test6() {
+		// 索引名称
+		IndexRequest request = new IndexRequest("posts");
+		// 指定文档ID
+		request.id("10");
+
+		String jsonString = "{" + "\"user\":\"kimchy\"," + "\"postDate\":\"2013-01-30\","
+				+ "\"message\":\"trying out Elasticsearch\"" + "}";
+		request.source(jsonString, XContentType.JSON);
+
+		ActionListener<IndexResponse> listener = new ActionListener<IndexResponse>() {
+
+			@Override
+			public void onResponse(IndexResponse response) {
+				log.info("successful: {}", response);
+			}
+
+			@Override
+			public void onFailure(Exception e) {
+				log.info("exception", e);
+			}
+		};
+
+		//异步调用不知道为什么一直有问题
+		restHighLevelClient.indexAsync(request, RequestOptions.DEFAULT, listener);
+	}
+
+	private void printIndexResponse(IndexResponse indexResponse) {
+		String index = indexResponse.getIndex();
+		String id = indexResponse.getId();
+		if (indexResponse.getResult() == DocWriteResponse.Result.CREATED) {
+			log.info("document created success");
+		} else if (indexResponse.getResult() == DocWriteResponse.Result.UPDATED) {
+			log.info("document updated success");
+		}
+
+		ReplicationResponse.ShardInfo shardInfo = indexResponse.getShardInfo();
+		if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
+			log.warn("有部分分片没有同步数据");
+		}
+
+		if (shardInfo.getFailed() > 0) {
+			for (ReplicationResponse.ShardInfo.Failure failure : shardInfo.getFailures()) {
+				String reason = failure.reason();
+				log.warn("失败原因：{}", reason);
+			}
+		}
 	}
 }
