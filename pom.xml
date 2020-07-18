@@ -12,7 +12,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<file.encoding>UTF-8</file.encoding>
 		<java.version>1.8</java.version>
-		<elasticsearch.version>7.1.1</elasticsearch.version>
+		<elasticsearch.version>7.4.0</elasticsearch.version>
 	</properties>
 	
 	<dependencyManagement>
@@ -25,7 +25,7 @@
 				<scope>import</scope>
 			</dependency>
 			
-			<!-- spring boot自带的es版本为6.x，升级到7.1.1 -->
+			<!-- spring boot自带的es版本为6.x，升级到7.4.0 -->
 			<dependency>
 			    <groupId>org.elasticsearch.client</groupId>
 			    <artifactId>elasticsearch-rest-high-level-client</artifactId>
