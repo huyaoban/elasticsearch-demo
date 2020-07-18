@@ -1,6 +1,7 @@
 package com.huyaoban.elasticsearch.document.api;
 
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.DocWriteResponse;
@@ -15,6 +16,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.rest.RestStatus;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,6 +127,8 @@ public class IndexTest {
 		request.version(2L);
 		request.versionType(VersionType.EXTERNAL);
 
+		//INDEX:索引文档，如果存在相同ID文档，则替换旧文档
+		//CREATE:索引文档，如果存在相同ID文档，则抛异常。异常的status为CONFLICT
 		request.opType(DocWriteRequest.OpType.CREATE);
 		request.opType("create");
 
@@ -180,6 +184,33 @@ public class IndexTest {
 			for (ReplicationResponse.ShardInfo.Failure failure : shardInfo.getFailures()) {
 				String reason = failure.reason();
 				log.warn("失败原因：{}", reason);
+			}
+		}
+	}
+
+	@Test
+	public void test7() throws IOException {
+		// 索引名称
+		IndexRequest request = new IndexRequest("posts");
+
+		//存在ID相同的文档时会抛异常
+		request.opType(DocWriteRequest.OpType.CREATE);
+
+		// 指定文档ID
+		request.id("1");
+
+		String jsonString = "{" + "\"user\":\"kimchy\"," + "\"postDate\":\"2013-01-30\","
+				+ "\"message\":\"trying out Elasticsearch\"" + "}";
+		request.source(jsonString, XContentType.JSON);
+
+		try {
+			IndexResponse response = restHighLevelClient.index(request, RequestOptions.DEFAULT);
+			log.info("{}", response);
+			printIndexResponse(response);
+		} catch (ElasticsearchException e) {
+			e.printStackTrace();
+			if(e.status() == RestStatus.CONFLICT) {
+				log.warn("已存在相同文档");
 			}
 		}
 	}
