@@ -13,7 +13,6 @@ public class ElasticSearchConfig {
 	@Primary
 	@Bean(destroyMethod = "close")
 	public RestHighLevelClient restHighLevelClient() {
-		return new RestHighLevelClient(RestClient.builder(new HttpHost("10.20.0.64", 9200, "http"),
-				new HttpHost("10.20.0.65", 9200, "http"), new HttpHost("10.20.0.66", 9200, "http")));
+		return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
 	}
 }
