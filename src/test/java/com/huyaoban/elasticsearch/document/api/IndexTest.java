@@ -1,24 +1,27 @@
 package com.huyaoban.elasticsearch.document.api;
 
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.VersionType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -96,5 +99,30 @@ public class IndexTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Request可设置的属性
+	 */
+	public void test5() {
+		IndexRequest request = new IndexRequest("posts");
+
+		//指定分片路由值
+		request.routing("routing");
+
+		//设置超时时间（写主分片的超时时间）
+		request.timeout(TimeValue.timeValueSeconds(1L));
+		request.timeout("1s");
+
+		request.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
+		request.setRefreshPolicy("wait_for");
+
+		request.version(2L);
+		request.versionType(VersionType.EXTERNAL);
+
+		request.opType(DocWriteRequest.OpType.CREATE);
+		request.opType("create");
+
+		request.setPipeline("pipeline");
 	}
 }
